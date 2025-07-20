@@ -3,6 +3,15 @@ import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Any
 import uuid
+from chromadb.api.types import EmbeddingFunction, Documents, Embeddings
+from sentence_transformers import SentenceTransformer
+
+class ArabicEmbeddingFunction(EmbeddingFunction[Documents]):
+    def __init__(self, model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"):
+        self.model = SentenceTransformer(model_name)
+
+    def __call__(self, input: Documents) -> Embeddings:
+        return self.model.encode(input).tolist()
 
 class ChromaService:
     def __init__(self):
@@ -15,9 +24,12 @@ class ChromaService:
             settings=Settings(anonymized_telemetry=False)
         )
         
-        # Get or create the experts collection
+        # Use the custom Arabic/multilingual embedding function
+        self.embedding_function = ArabicEmbeddingFunction()
+        # Get or create the experts collection with the custom embedding function
         self.collection = self.client.get_or_create_collection(
             name="experts",
+            embedding_function=self.embedding_function,
             metadata={"hnsw:space": "cosine"}
         )
     

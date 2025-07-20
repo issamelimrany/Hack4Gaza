@@ -8,3 +8,4 @@ numpy
 scikit-learn
 requests
 sentence-transformers
+supabase
