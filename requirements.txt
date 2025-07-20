@@ -9,3 +9,4 @@ scikit-learn
 requests
 sentence-transformers
 supabase
+psycopg2-binary
