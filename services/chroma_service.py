@@ -4,14 +4,25 @@ from chromadb.config import Settings
 from typing import List, Dict, Any
 import uuid
 from chromadb.api.types import EmbeddingFunction, Documents, Embeddings
-from sentence_transformers import SentenceTransformer
+import google.generativeai as genai
 
-class ArabicEmbeddingFunction(EmbeddingFunction[Documents]):
-    def __init__(self, model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"):
-        self.model = SentenceTransformer(model_name)
+class GeminiEmbeddingFunction(EmbeddingFunction[Documents]):
+    def __init__(self):
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        if not self.api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is required")
+        genai.configure(api_key=self.api_key)
 
     def __call__(self, input: Documents) -> Embeddings:
-        return self.model.encode(input).tolist()
+        embeddings = []
+        for text in input:
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=text,
+                task_type="retrieval_document"
+            )
+            embeddings.append(result['embedding'])
+        return embeddings
 
 class ChromaService:
     def __init__(self):
@@ -24,8 +35,8 @@ class ChromaService:
             settings=Settings(anonymized_telemetry=False)
         )
         
-        # Use the custom Arabic/multilingual embedding function
-        self.embedding_function = ArabicEmbeddingFunction()
+        # Use the Gemini embedding function
+        self.embedding_function = GeminiEmbeddingFunction()
         # Get or create the experts collection with the custom embedding function
         self.collection = self.client.get_or_create_collection(
             name="experts",

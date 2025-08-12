@@ -4,9 +4,5 @@ chromadb
 openai
 python-dotenv
 pydantic
-numpy
-scikit-learn
-requests
-sentence-transformers
-supabase
 psycopg2-binary
+google-generativeai
